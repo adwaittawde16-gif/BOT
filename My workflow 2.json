@@ -1,0 +1,127 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "CET colleges",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "428d2287-92b2-4c9f-abc0-2e8f88e7ae46",
+      "name": "Webhook",
+      "webhookId": "6e27e5f2-abc5-4892-9a05-6fef60586bdf"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/109UFz66zVS8ltUpJSJkqVGs_pvsbM62FBys6DTs82Yw/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/109UFz66zVS8ltUpJSJkqVGs_pvsbM62FBys6DTs82Yw/edit?gid=86043517#gid=86043517",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d61d316f-f815-4dcc-9e47-297b65cc984d",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YHGlg3kVe6fjdyyQ",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get webhook input\nconst webhookData = $('Webhook').first().json.body;\n\nconst percentile = parseFloat(webhookData.percentile);\nconst category = webhookData.category || 'General';\n\n// Get all rows from sheet\nconst allColleges = $('Get row(s) in sheet')\n  .all()\n  .map(item => item.json);\n\n// Filter colleges\nconst eligible = allColleges.filter(college => {\n\n  const cutoff = parseFloat(college['Opening Percentile']);\n\n  return cutoff <= percentile;\n});\n\n// Sort highest eligible cutoff first\neligible.sort((a, b) =>\n  parseFloat(b['Opening Percentile']) -\n  parseFloat(a['Opening Percentile'])\n);\n\n// Return results\nreturn eligible.map(college => ({\n  json: college\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "17e4810a-0c67-4820-9b1f-6c850551d46d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"percentile\": 97\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        0
+      ],
+      "id": "847ddafb-e82e-40ed-b1cf-7f4138a793f2",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b3e34e66-10df-4b3c-8ef1-32f2c74de2df",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6986f4fcda6e6e756c4a99292c700b8d7aa22c98e65a4c5e00154ce5ae5c03de"
+  },
+  "id": "sG5VoZ0IFIVYZMBL",
+  "tags": []
+}
